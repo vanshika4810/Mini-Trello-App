@@ -33,7 +33,7 @@ const CreateCard = ({ listId, onCardCreated, onCancel }) => {
           listId,
           workspaceId: window.location.pathname.split("/")[2],
           labels: formData.labels.filter((label) => label.trim() !== ""),
-          dueDate: formData.dueDate || null,
+          dueDate: formData.dueDate || undefined,
         }),
       });
 
@@ -137,7 +137,7 @@ const CreateCard = ({ listId, onCardCreated, onCancel }) => {
           <input
             type="text"
             name="newLabel"
-            placeholder="Add a label..."
+            placeholder="Add a label/comments..."
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -182,23 +182,6 @@ const CreateCard = ({ listId, onCardCreated, onCancel }) => {
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
-            className="flex-1 p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div>
-        <div className="flex items-center space-x-2">
-          <User className="h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            name="assignedTo"
-            placeholder="Assign to (email or name)..."
-            value={formData.assignedTo}
-            onChange={(e) =>
-              setFormData({ ...formData, assignedTo: e.target.value })
-            }
-            onKeyPress={handleKeyPress}
             className="flex-1 p-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>

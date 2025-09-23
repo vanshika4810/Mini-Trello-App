@@ -34,7 +34,7 @@ const EditCard = ({ card, onSave, onCancel }) => {
             description: formData.description.trim(),
             assignedTo: formData.assignedTo.trim() || undefined,
             labels: formData.labels.filter((label) => label.trim() !== ""),
-            dueDate: formData.dueDate || null,
+            dueDate: formData.dueDate || undefined,
           }),
         }
       );
