@@ -57,6 +57,17 @@ router.post(
         $push: { lists: list._id },
       });
 
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`workspace-${workspaceId}`).emit("list-created", {
+          workspaceId: workspaceId,
+          list: list,
+          userId: req.user.id,
+          userName: req.user.name,
+        });
+      }
+
       res.status(201).json({
         message: "List created successfully",
         list,
@@ -105,6 +116,22 @@ router.put(
         { new: true }
       );
 
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        const emitData = {
+          workspaceId: list.workspaceId,
+          listId: listId,
+          list: updatedList,
+          userId: req.user.id,
+          userName: req.user.name,
+        };
+        console.log("Emitting list-updated event:", emitData);
+        io.to(`workspace-${list.workspaceId}`).emit("list-updated", emitData);
+      } else {
+        console.log("Socket.io not available for list update emission");
+      }
+
       res.json({
         message: "List updated successfully",
         list: updatedList,
@@ -142,6 +169,17 @@ router.delete("/:listId", auth, async (req, res) => {
     });
 
     await List.findByIdAndDelete(listId);
+
+    // Emit real-time update
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`workspace-${list.workspaceId}`).emit("list-deleted", {
+        workspaceId: list.workspaceId,
+        listId: listId,
+        userId: req.user.id,
+        userName: req.user.name,
+      });
+    }
 
     res.json({
       message: "List deleted successfully",

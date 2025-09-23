@@ -11,6 +11,11 @@ const workspaceSchema = new mongoose.Schema({
     default: "private",
     required: true,
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   dueDate: {
     type: Date,
   },
@@ -20,7 +25,18 @@ const workspaceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-      role: String,
+      role: {
+        type: String,
+        enum: ["admin", "member"],
+        default: "member",
+      },
+      invitedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      joinedAt: {
+        type: Date,
+      },
     },
   ],
   lists: [

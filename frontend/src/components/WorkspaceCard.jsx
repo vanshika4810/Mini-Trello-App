@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Lock, Globe, Users, Calendar, Settings, Trash2 } from "lucide-react";
+import {
+  Lock,
+  Globe,
+  Users,
+  Calendar,
+  Settings,
+  Trash2,
+  User,
+  Crown,
+} from "lucide-react";
 
 const WorkspaceCard = ({
   workspace,
@@ -104,10 +113,42 @@ const WorkspaceCard = ({
       </div>
 
       <div className="space-y-2 cursor-default">
+        {/* Owner Information */}
+        {workspace.owner && (
+          <div className="flex items-center text-sm text-gray-600">
+            <Crown className="h-4 w-4 mr-2 text-yellow-500" />
+            <span>Owner: {workspace.owner.name}</span>
+          </div>
+        )}
+
+        {/* Member Count */}
         <div className="flex items-center text-sm text-gray-600">
           <Users className="h-4 w-4 mr-2" />
           <span>{workspace.members?.length || 0} members</span>
         </div>
+
+        {/* Member List (show first 3 members) */}
+        {workspace.members && workspace.members.length > 0 && (
+          <div className="flex items-center text-sm text-gray-600">
+            <User className="h-4 w-4 mr-2" />
+            <div className="flex -space-x-1">
+              {workspace.members.slice(0, 3).map((member, index) => (
+                <div
+                  key={member.user._id}
+                  className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                  title={`${member.user.name} (${member.role})`}
+                >
+                  {member.user.name.charAt(0).toUpperCase()}
+                </div>
+              ))}
+              {workspace.members.length > 3 && (
+                <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white">
+                  +{workspace.members.length - 3}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {workspace.dueDate && (
           <div className="flex items-center text-sm text-gray-600">

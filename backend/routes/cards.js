@@ -84,6 +84,18 @@ router.post(
 
       await card.populate("assignedTo", "name email");
 
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`workspace-${workspaceId}`).emit("card-created", {
+          workspaceId: workspaceId,
+          listId: listId,
+          card: card,
+          userId: req.user.id,
+          userName: req.user.name,
+        });
+      }
+
       res.status(201).json({
         message: "Card created successfully",
         card,
@@ -158,6 +170,19 @@ router.put(
       });
 
       console.log("Cards reordered successfully");
+
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`workspace-${workspace._id}`).emit("cards-reordered", {
+          workspaceId: workspace._id,
+          listId: listId,
+          cardOrder: cardOrder,
+          userId: req.user.id,
+          userName: req.user.name,
+        });
+      }
+
       res.json({
         message: "Cards reordered successfully",
         listId: listId,
@@ -222,6 +247,18 @@ router.put(
       const updatedCard = await Card.findByIdAndUpdate(cardId, updateData, {
         new: true,
       }).populate("assignedTo", "name email");
+
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`workspace-${card.workspaceId}`).emit("card-updated", {
+          workspaceId: card.workspaceId,
+          cardId: cardId,
+          card: updatedCard,
+          userId: req.user.id,
+          userName: req.user.name,
+        });
+      }
 
       res.json({
         message: "Card updated successfully",
@@ -341,6 +378,21 @@ router.put(
         .populate("assignedTo", "name email")
         .populate("listId", "title");
 
+      // Emit real-time update
+      const io = req.app.get("io");
+      if (io) {
+        io.to(`workspace-${workspace._id}`).emit("card-moved", {
+          workspaceId: workspace._id,
+          cardId: cardId,
+          card: updatedCard,
+          sourceListId: isMovingToDifferentList ? sourceListId : null,
+          targetListId: targetListId,
+          newPosition: newPosition,
+          userId: req.user.id,
+          userName: req.user.name,
+        });
+      }
+
       res.json({
         message: "Card moved successfully",
         card: updatedCard,
@@ -376,6 +428,18 @@ router.delete("/:cardId", auth, async (req, res) => {
       $pull: { cards: cardId, cardOrder: cardId },
     });
     await Card.findByIdAndDelete(cardId);
+
+    // Emit real-time update
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`workspace-${card.workspaceId}`).emit("card-deleted", {
+        workspaceId: card.workspaceId,
+        listId: card.listId,
+        cardId: cardId,
+        userId: req.user.id,
+        userName: req.user.name,
+      });
+    }
 
     res.json({
       message: "Card deleted successfully",
