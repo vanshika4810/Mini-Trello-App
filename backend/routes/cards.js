@@ -95,6 +95,82 @@ router.post(
   }
 );
 
+// Reorder cards within the same list
+router.put(
+  "/reorder",
+  [
+    auth,
+    body("listId").isMongoId().withMessage("Valid list ID is required"),
+    body("cardOrder").isArray().withMessage("Card order array is required"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      const { listId, cardOrder } = req.body;
+
+      // Check if user has access to the list's workspace
+      const list = await List.findById(listId).populate("workspaceId");
+      if (!list) {
+        return res.status(404).json({ message: "List not found" });
+      }
+
+      const workspace = await Workspace.findOne({
+        _id: list.workspaceId,
+        "members.user": req.user.id,
+      });
+
+      if (!workspace) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const cardsInList = await Card.find({ listId: listId });
+      const listCardIds = cardsInList.map((card) => card._id.toString());
+
+      console.log("Cards in list:", listCardIds);
+      console.log("Card order received:", cardOrder);
+
+      for (const cardId of cardOrder) {
+        const cardIdStr = cardId.toString();
+        if (!listCardIds.includes(cardIdStr)) {
+          console.error(`Card ${cardId} does not belong to list ${listId}`);
+          return res.status(400).json({
+            message: `Card ${cardId} does not belong to this list`,
+          });
+        }
+      }
+
+      console.log("Updating card positions...");
+      for (let i = 0; i < cardOrder.length; i++) {
+        console.log(`Updating card ${cardOrder[i]} to position ${i + 1}`);
+        await Card.findByIdAndUpdate(cardOrder[i], { position: i + 1 });
+      }
+
+      console.log("Updating list cardOrder array...");
+      await List.findByIdAndUpdate(listId, {
+        cardOrder: cardOrder,
+      });
+
+      console.log("Cards reordered successfully");
+      res.json({
+        message: "Cards reordered successfully",
+        listId: listId,
+        cardOrder: cardOrder,
+      });
+    } catch (error) {
+      console.error("Reorder cards error:", error);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ message: "Server error during card reorder" });
+    }
+  }
+);
+
 //  Update a card
 router.put(
   "/:cardId",
@@ -154,6 +230,127 @@ router.put(
     } catch (error) {
       console.error("Update card error:", error);
       res.status(500).json({ message: "Server error during card update" });
+    }
+  }
+);
+
+// Move a card to a new position or different list
+router.put(
+  "/:cardId/move",
+  [
+    auth,
+    body("targetListId")
+      .isMongoId()
+      .withMessage("Valid target list ID is required"),
+    body("newPosition")
+      .isInt({ min: 0 })
+      .withMessage("Valid position is required"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      const { cardId } = req.params;
+      const { targetListId, newPosition } = req.body;
+
+      // Get the card and check if user has access
+      const card = await Card.findById(cardId);
+      if (!card) {
+        return res.status(404).json({ message: "Card not found" });
+      }
+
+      // Check if user has access to the card's workspace
+      const workspace = await Workspace.findOne({
+        _id: card.workspaceId,
+        "members.user": req.user.id,
+      });
+
+      if (!workspace) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Check if target list exists and belongs to the same workspace
+      const targetList = await List.findOne({
+        _id: targetListId,
+        workspaceId: card.workspaceId,
+      });
+
+      if (!targetList) {
+        return res.status(404).json({
+          message: "Target list not found or doesn't belong to this workspace",
+        });
+      }
+
+      const sourceListId = card.listId;
+      const isMovingToDifferentList = sourceListId.toString() !== targetListId;
+
+      if (isMovingToDifferentList) {
+        // Moving to a different list
+        // Remove card from source list
+        await List.findByIdAndUpdate(sourceListId, {
+          $pull: { cards: cardId, cardOrder: cardId },
+        });
+
+        // Add card to target list
+        await List.findByIdAndUpdate(targetListId, {
+          $push: { cards: cardId, cardOrder: cardId },
+        });
+
+        // Update card's listId
+        card.listId = targetListId;
+      }
+
+      // Update card position
+      card.position = newPosition;
+      await card.save();
+
+      // Reorder cards in the target list
+      const cardsInList = await Card.find({ listId: targetListId }).sort({
+        position: 1,
+      });
+
+      // Update positions to be sequential
+      for (let i = 0; i < cardsInList.length; i++) {
+        if (cardsInList[i]._id.toString() === cardId) {
+          // Move the card to the desired position
+          const cardToMove = cardsInList.splice(i, 1)[0];
+          cardsInList.splice(newPosition, 0, cardToMove);
+          break;
+        }
+      }
+
+      // Update positions for all cards in the list
+      for (let i = 0; i < cardsInList.length; i++) {
+        await Card.findByIdAndUpdate(cardsInList[i]._id, { position: i + 1 });
+      }
+
+      // Update cardOrder array in the list
+      const updatedCardOrder = cardsInList.map((c) => c._id);
+      await List.findByIdAndUpdate(targetListId, {
+        cardOrder: updatedCardOrder,
+      });
+
+      // Get the updated card with populated data
+      const updatedCard = await Card.findById(cardId)
+        .populate("assignedTo", "name email")
+        .populate("listId", "title");
+
+      res.json({
+        message: "Card moved successfully",
+        card: updatedCard,
+        sourceListId: isMovingToDifferentList ? sourceListId : null,
+        targetListId: targetListId,
+        newPosition: newPosition,
+      });
+    } catch (error) {
+      console.error("Move card error:", error);
+      res.status(500).json({ message: "Server error during card move" });
     }
   }
 );

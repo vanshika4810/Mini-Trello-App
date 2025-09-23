@@ -1,10 +1,26 @@
 import React, { useState } from "react";
 import { Calendar, User, Tag, Edit2, Trash2, Move } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import EditCard from "./EditCard";
 
 const Card = ({ card, onEdit, onDelete, onMove, isDragging = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: card._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const formatDate = (date) => {
     if (!date) return null;
@@ -53,12 +69,15 @@ const Card = ({ card, onEdit, onDelete, onMove, isDragging = false }) => {
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
       className={`bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 cursor-pointer ${
-        isDragging ? "opacity-50 transform rotate-2" : ""
+        isSortableDragging ? "opacity-50 transform rotate-2" : ""
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onDoubleClick={handleEdit}
+      {...attributes}
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-medium text-gray-900 text-sm leading-tight">
@@ -78,8 +97,9 @@ const Card = ({ card, onEdit, onDelete, onMove, isDragging = false }) => {
                 e.stopPropagation();
                 onMove(card);
               }}
-              className="p-1 text-gray-400 hover:text-green-600 transition-colors"
-              title="Move card"
+              className="p-1 text-gray-400 hover:text-green-600 transition-colors cursor-grab active:cursor-grabbing"
+              title="Drag to move card"
+              {...listeners}
             >
               <Move className="h-3 w-3" />
             </button>

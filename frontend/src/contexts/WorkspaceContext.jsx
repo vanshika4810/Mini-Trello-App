@@ -150,6 +150,221 @@ export const WorkspaceProvider = ({ children }) => {
     }
   }, []);
 
+  const moveCard = useCallback(
+    async (cardId, targetListId, newPosition, workspaceId) => {
+      try {
+        const token = localStorage.getItem("token");
+        console.log("Frontend - Moving card:", {
+          cardId,
+          targetListId,
+          newPosition,
+          workspaceId,
+        });
+        const response = await axios.put(
+          `http://localhost:5000/api/cards/${cardId}/move`,
+          {
+            targetListId,
+            newPosition,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Refresh the workspace to get updated data for cross-list moves
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after move:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: true, data: response.data };
+      } catch (error) {
+        const message = error.response?.data?.message || "Failed to move card";
+
+        // If there's an error, refresh the workspace to get the correct state
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after move error:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: false, error: message };
+      }
+    },
+    [getWorkspace]
+  );
+
+  const reorderCards = useCallback(
+    async (listId, cardOrder, workspaceId) => {
+      try {
+        const token = localStorage.getItem("token");
+        console.log("Frontend - Reordering cards:", {
+          listId,
+          cardOrder,
+          workspaceId,
+        });
+        const response = await axios.put(
+          `http://localhost:5000/api/cards/reorder`,
+          {
+            listId,
+            cardOrder,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Refresh the workspace to get updated data from the database
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after reorder:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: true, data: response.data };
+      } catch (error) {
+        const message =
+          error.response?.data?.message || "Failed to reorder cards";
+
+        // If there's an error, refresh the workspace to get the correct state
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after reorder error:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: false, error: message };
+      }
+    },
+    [getWorkspace]
+  );
+
+  const reorderLists = useCallback(
+    async (workspaceId, listOrder) => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.put(
+          `http://localhost:5000/api/workspaces/${workspaceId}/reorder-lists`,
+          {
+            listOrder,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Refresh the workspace to get updated data
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after list reorder:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: true, data: response.data };
+      } catch (error) {
+        const message =
+          error.response?.data?.message || "Failed to reorder lists";
+
+        // If there's an error, refresh the workspace to get the correct state
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after list reorder error:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: false, error: message };
+      }
+    },
+    [getWorkspace]
+  );
+
+  const editList = useCallback(
+    async (listId, title, workspaceId) => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.put(
+          `http://localhost:5000/api/lists/${listId}`,
+          {
+            title,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Refresh the workspace to get updated data
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after list edit:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: true, data: response.data };
+      } catch (error) {
+        const message = error.response?.data?.message || "Failed to edit list";
+
+        // If there's an error, refresh the workspace to get the correct state
+        if (workspaceId) {
+          try {
+            await getWorkspace(workspaceId);
+          } catch (refreshError) {
+            console.error(
+              "Failed to refresh workspace after list edit error:",
+              refreshError
+            );
+          }
+        }
+
+        return { success: false, error: message };
+      }
+    },
+    [getWorkspace]
+  );
+
   const clearError = () => {
     dispatch({ type: "CLEAR_ERROR" });
   };
@@ -160,6 +375,10 @@ export const WorkspaceProvider = ({ children }) => {
     getWorkspaces,
     getWorkspace,
     updateWorkspace,
+    moveCard,
+    reorderCards,
+    reorderLists,
+    editList,
     clearError,
   };
 

@@ -191,4 +191,60 @@ router.delete("/:workspaceId", auth, async (req, res) => {
   }
 });
 
+// Reorder lists within a workspace
+router.put(
+  "/:workspaceId/reorder-lists",
+  [
+    auth,
+    body("listOrder").isArray().withMessage("List order array is required"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      const { workspaceId } = req.params;
+      const { listOrder } = req.body;
+
+      const workspace = await Workspace.findOne({
+        _id: workspaceId,
+        "members.user": req.user.id,
+      });
+
+      if (!workspace) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const workspaceListIds = workspace.lists.map((list) => list.toString());
+
+      for (const listId of listOrder) {
+        const listIdStr = listId.toString();
+        if (!workspaceListIds.includes(listIdStr)) {
+          return res.status(400).json({
+            message: `List ${listId} does not belong to this workspace`,
+          });
+        }
+      }
+
+      await Workspace.findByIdAndUpdate(workspaceId, {
+        lists: listOrder,
+      });
+
+      res.json({
+        message: "Lists reordered successfully",
+        workspaceId: workspaceId,
+        listOrder: listOrder,
+      });
+    } catch (error) {
+      console.error("Reorder lists error:", error);
+      res.status(500).json({ message: "Server error during list reorder" });
+    }
+  }
+);
+
 module.exports = router;

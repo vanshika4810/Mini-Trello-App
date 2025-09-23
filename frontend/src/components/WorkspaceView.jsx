@@ -3,6 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useWorkspace } from "../contexts/WorkspaceContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
   ArrowLeft,
   Settings,
   Users,
@@ -19,11 +34,29 @@ import CreateList from "./CreateList";
 const WorkspaceView = () => {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
-  const { currentWorkspace, getWorkspace, loading, error } = useWorkspace();
+  const {
+    currentWorkspace,
+    getWorkspace,
+    loading,
+    error,
+    moveCard,
+    reorderCards,
+    reorderLists,
+    editList,
+  } = useWorkspace();
   const { user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [movingCard, setMovingCard] = useState(null);
   const [isCreatingList, setIsCreatingList] = useState(false);
+  const [activeCard, setActiveCard] = useState(null);
+  const [activeList, setActiveList] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -130,6 +163,223 @@ const WorkspaceView = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleListEdit = async (listId, newTitle) => {
+    try {
+      const result = await editList(listId, newTitle, workspaceId);
+      if (!result.success) {
+        console.error("Failed to edit list:", result.error);
+        alert("Failed to update list title. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error editing list:", error);
+      alert("Failed to update list title. Please try again.");
+    }
+  };
+
+  const handleDragStart = (event) => {
+    const { active } = event;
+
+    // Check if dragging a card or a list
+    const isCard = currentWorkspace.lists?.some((list) =>
+      list.cards?.some((card) => card._id === active.id)
+    );
+
+    if (isCard) {
+      setActiveCard(active);
+    } else {
+      // It's a list
+      setActiveList(active);
+    }
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveCard(null);
+    setActiveList(null);
+
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    console.log("Drag end - Active ID:", activeId, "Over ID:", overId);
+
+    // Check if we're dragging a list or a card
+    const isDraggingList = currentWorkspace.lists?.some(
+      (list) => list._id === activeId
+    );
+
+    console.log("Is dragging list:", isDraggingList);
+
+    if (isDraggingList) {
+      // Handle list reordering
+      const sourceIndex = currentWorkspace.lists.findIndex(
+        (list) => list._id === activeId
+      );
+      const targetIndex = currentWorkspace.lists.findIndex(
+        (list) => list._id === overId
+      );
+
+      console.log(
+        "List reorder - Source index:",
+        sourceIndex,
+        "Target index:",
+        targetIndex
+      );
+
+      if (sourceIndex !== targetIndex) {
+        const newListOrder = arrayMove(
+          currentWorkspace.lists,
+          sourceIndex,
+          targetIndex
+        );
+        const listIds = newListOrder.map((list) => list._id);
+
+        console.log("New list order:", listIds);
+
+        try {
+          const result = await reorderLists(workspaceId, listIds);
+          console.log("Reorder lists result:", result);
+          if (!result.success) {
+            console.error("Failed to reorder lists:", result.error);
+          }
+        } catch (error) {
+          console.error("Error reordering lists:", error);
+        }
+      }
+      return;
+    }
+
+    // Handle card drag and drop (existing logic)
+    console.log("Handling card drag and drop");
+
+    // Find the source list and card
+    let sourceList = null;
+    let sourceCard = null;
+
+    for (const list of currentWorkspace.lists || []) {
+      const card = list.cards?.find((c) => c._id === activeId);
+      if (card) {
+        sourceList = list;
+        sourceCard = card;
+        break;
+      }
+    }
+
+    console.log(
+      "Source list:",
+      sourceList?.title,
+      "Source card:",
+      sourceCard?.title
+    );
+
+    if (!sourceList || !sourceCard) {
+      console.log("No source list or card found");
+      return;
+    }
+
+    // Check if dropping on a list or a card
+    const isOverList = currentWorkspace.lists.some(
+      (list) => list._id === overId
+    );
+    const isOverCard = currentWorkspace.lists.some((list) =>
+      list.cards?.some((card) => card._id === overId)
+    );
+
+    if (isOverList) {
+      // Dropping on a list
+      const targetList = currentWorkspace.lists.find(
+        (list) => list._id === overId
+      );
+      if (targetList && targetList._id !== sourceList._id) {
+        // Moving to different list
+        const newPosition = targetList.cards?.length || 0;
+        console.log("Moving card to list - New position:", newPosition);
+        try {
+          const result = await moveCard(
+            activeId,
+            overId,
+            newPosition,
+            workspaceId
+          );
+          console.log("Move card to list result:", result);
+          if (!result.success) {
+            console.error("Failed to move card:", result.error);
+          }
+        } catch (error) {
+          console.error("Error moving card:", error);
+        }
+      }
+    } else if (isOverCard) {
+      // Dropping on a card
+      let targetList = null;
+      let targetCard = null;
+
+      for (const list of currentWorkspace.lists || []) {
+        const card = list.cards?.find((c) => c._id === overId);
+        if (card) {
+          targetList = list;
+          targetCard = card;
+          break;
+        }
+      }
+
+      if (!targetList || !targetCard) return;
+
+      if (targetList._id === sourceList._id) {
+        // Reordering within same list
+        const sourceIndex = sourceList.cards.findIndex(
+          (c) => c._id === activeId
+        );
+        const targetIndex = sourceList.cards.findIndex((c) => c._id === overId);
+
+        if (sourceIndex !== targetIndex) {
+          const newCardOrder = arrayMove(
+            sourceList.cards,
+            sourceIndex,
+            targetIndex
+          );
+          const cardIds = newCardOrder.map((card) => card._id);
+          console.log("Reordering cards in same list - Card IDs:", cardIds);
+          try {
+            const result = await reorderCards(
+              sourceList._id,
+              cardIds,
+              workspaceId
+            );
+            console.log("Reorder cards result:", result);
+            if (!result.success) {
+              console.error("Failed to reorder cards:", result.error);
+            }
+          } catch (error) {
+            console.error("Error reordering cards:", error);
+          }
+        }
+      } else {
+        // Moving to different list
+        const targetIndex = targetList.cards.findIndex((c) => c._id === overId);
+        console.log(
+          "Moving card to different list - Target index:",
+          targetIndex
+        );
+        try {
+          const result = await moveCard(
+            activeId,
+            targetList._id,
+            targetIndex,
+            workspaceId
+          );
+          console.log("Move card result:", result);
+          if (!result.success) {
+            console.error("Failed to move card:", result.error);
+          }
+        } catch (error) {
+          console.error("Error moving card:", error);
+        }
+      }
+    }
   };
 
   if (isLoading || loading) {
@@ -254,27 +504,74 @@ const WorkspaceView = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex space-x-6 overflow-x-auto pb-4">
-          {currentWorkspace.lists && currentWorkspace.lists.length > 0 && (
-            <>
-              {currentWorkspace.lists.map((list) => (
-                <List
-                  key={list._id}
-                  list={list}
-                  onCardCreated={handleCardCreated}
-                  onCardEdit={handleCardEdit}
-                  onCardDelete={handleCardDelete}
-                  onCardMove={handleCardMove}
-                  onListDelete={handleListDelete}
-                />
-              ))}
-            </>
-          )}
-          <CreateList
-            workspaceId={workspaceId}
-            onListCreated={handleListCreated}
-          />
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={currentWorkspace.lists?.map((list) => list._id) || []}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex space-x-6 overflow-x-auto pb-4">
+              {currentWorkspace.lists && currentWorkspace.lists.length > 0 && (
+                <>
+                  {currentWorkspace.lists.map((list) => (
+                    <List
+                      key={list._id}
+                      list={list}
+                      onCardCreated={handleCardCreated}
+                      onCardEdit={handleCardEdit}
+                      onCardDelete={handleCardDelete}
+                      onCardMove={handleCardMove}
+                      onListDelete={handleListDelete}
+                      onListEdit={handleListEdit}
+                    />
+                  ))}
+                </>
+              )}
+              <CreateList
+                workspaceId={workspaceId}
+                onListCreated={handleListCreated}
+              />
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeCard ? (
+              <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg opacity-90">
+                <h4 className="font-medium text-gray-900 text-sm">
+                  {
+                    currentWorkspace.lists
+                      ?.flatMap((list) => list.cards || [])
+                      .find((card) => card._id === activeCard.id)?.title
+                  }
+                </h4>
+              </div>
+            ) : activeList ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-80 opacity-90">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {
+                          currentWorkspace.lists?.find(
+                            (list) => list._id === activeList.id
+                          )?.title
+                        }
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 min-h-96">
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="text-sm">Dragging list...</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
 
       {isCreatingList && (
