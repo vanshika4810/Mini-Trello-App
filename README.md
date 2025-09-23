@@ -85,7 +85,7 @@ A full-featured Kanban board application with real-time collaboration, built wit
    ```env
    PORT=5000
    MONGODB_URI=mongodb://localhost:27017/mini-trello
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   JWT_SECRET=your-jwt-key
    NODE_ENV=development
    ```
 
