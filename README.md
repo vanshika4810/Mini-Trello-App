@@ -52,6 +52,7 @@ A full-featured Kanban board application with real-time collaboration, built wit
 - **Node.js**
 - **MongoDB Compass**
 - **MongoDB Database Tools** (mongorestore)
+- **MongoDB Database Tools** (mongorestore)
 - **npm**
 
 ### Installation
