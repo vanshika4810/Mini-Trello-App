@@ -1,26 +1,34 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
-const workspaceSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      trim: true,
-    },
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    members: [
-      {
+const workspaceSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  visibility: {
+    type: String,
+    enum: ["private", "public"],
+    default: "private",
+    required: true,
+  },
+  dueDate: {
+    type: Date,
+  },
+  members: [
+    {
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
-    ],
-  },
-  {
-    timestamps: true,
-  }
-);
+      role: String,
+    },
+  ],
+  lists: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "List",
+    },
+  ],
+});
 
 module.exports = mongoose.model("Workspace", workspaceSchema);

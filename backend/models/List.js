@@ -5,14 +5,26 @@ const listSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  boardId: {
+  workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Board",
+    ref: "Workspace",
   },
   position: {
     type: Number,
     required: true,
   },
+  cards: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Card",
+    },
+  ],
+  cardOrder: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Card",
+    },
+  ],
 });
 
 module.exports = mongoose.model("List", listSchema);

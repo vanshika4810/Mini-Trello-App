@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const activitySchema = new mongoose.Schema({
-  boardId: {
+  workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Board",
+    ref: "Workspace",
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,

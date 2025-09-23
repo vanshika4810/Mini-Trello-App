@@ -7,26 +7,24 @@ const cardSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    default: "",
   },
   listId: {
-    type: mongoose.Schema.Type.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "List",
   },
-  boardId: {
+  workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Board",
+    ref: "Workspace",
   },
   position: {
     type: Number,
     required: true,
   },
-  assignees: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   labels: [
     {
       type: String,
@@ -37,4 +35,4 @@ const cardSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.Schema("Card", cardSchema);
+module.exports = mongoose.model("Card", cardSchema);
