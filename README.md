@@ -51,6 +51,7 @@ A full-featured Kanban board application with real-time collaboration, built wit
 
 - **Node.js**
 - **MongoDB Compass**
+- **MongoDB Database Tools** (mongorestore)
 - **npm**
 
 ### Installation
@@ -87,7 +88,34 @@ A full-featured Kanban board application with real-time collaboration, built wit
    NODE_ENV=development
    ```
 
-5. **Start MongoDB**
+5. **Restore the database dump**
+
+   The project includes a sample database dump in the `db` folder. To restore it:
+
+   ```bash
+   # Navigate to the project root
+   cd mini-trello-app
+
+   # Restore the database dump
+   mongorestore --db mini-trello db/mini-kanban
+   ```
+
+   This will create a `mini-trello` database with sample data including:
+
+   - Sample users
+     1. email: john@abc.com
+        password: testing
+     2. email: divya@gmail.com
+        password: testing
+     3. rohit@xyz.com
+        password: testing
+     4. email: marie@hotmail.com
+        password: testing
+   - Sample workspaces
+   - Sample lists and cards
+   - Sample activities and comments
+
+6. **Start MongoDB**
    Make sure MongoDB is running on your system.
 
 ### Running the Application
@@ -179,226 +207,5 @@ A full-featured Kanban board application with real-time collaboration, built wit
    - Reorder cards within lists
    - Drag lists to reorder them
    - All movements sync in real-time
-
-## API Endpoints
-
-### Authentication
-
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user (protected)
-
-### Workspaces
-
-- `POST /api/workspaces` - Create workspace
-- `GET /api/workspaces` - Get user's workspaces
-- `GET /api/workspaces/:id` - Get single workspace
-- `PUT /api/workspaces/:id/visibility` - Toggle visibility
-- `DELETE /api/workspaces/:id` - Delete workspace
-- `POST /api/workspaces/:id/members` - Add member
-- `DELETE /api/workspaces/:id/members/:userId` - Remove member
-- `GET /api/workspaces/users/search` - Search users
-
-### Lists
-
-- `POST /api/lists` - Create list
-- `PUT /api/lists/:id` - Update list
-- `DELETE /api/lists/:id` - Delete list
-- `PUT /api/workspaces/:id/reorder-lists` - Reorder lists
-
-### Cards
-
-- `POST /api/cards` - Create card
-- `PUT /api/cards/:id` - Update card
-- `DELETE /api/cards/:id` - Delete card
-- `PUT /api/cards/reorder` - Reorder cards
-- `PUT /api/cards/:id/move` - Move card
-
-## Project Structure
-
-```
-mini-trello-app/
-├── backend/
-│   ├── config/
-│   │   └── database.js
-│   ├── middleware/
-│   │   └── auth.js
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Workspace.js
-│   │   ├── List.js
-│   │   ├── Card.js
-│   │   └── Activity.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── workspaces.js
-│   │   ├── lists.js
-│   │   └── cards.js
-│   ├── .env
-│   ├── index.js
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── auth/
-│   │   │   │   ├── Login.jsx
-│   │   │   │   ├── Register.jsx
-│   │   │   │   └── ProtectedRoute.jsx
-│   │   │   ├── WorkspaceCard.jsx
-│   │   │   ├── WorkspaceView.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── List.jsx
-│   │   │   ├── Card.jsx
-│   │   │   ├── CreateList.jsx
-│   │   │   ├── CreateCard.jsx
-│   │   │   ├── EditCard.jsx
-│   │   │   ├── InviteMembers.jsx
-│   │   │   └── UserCursor.jsx
-│   │   ├── contexts/
-│   │   │   ├── AuthContext.jsx
-│   │   │   ├── WorkspaceContext.jsx
-│   │   │   └── SocketContext.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-└── README.md
-```
-
-## 🛠️ Technologies Used
-
-### Backend
-
-- **Node.js**
-- **Express.js**
-- **MongoDB**
-- **Mongoose**
-- **Socket.io**
-- **JWT**
-- **bcryptjs**
-- **CORS**
-
-### Frontend
-
-- **React**
-- **React Router DOM**
-- **Tailwind CSS**
-- **@dnd-kit**
-- **Socket.io Client**
-- **Axios**
-- **Context API**
-- **Lucide React**
-
-## Security Features
-
-- **Password Hashing** with bcryptjs
-- **JWT Token Authentication** with user data
-- **Input Validation** and sanitization
-- **CORS Configuration** for cross-origin requests
-- **Environment Variables** for sensitive data
-- **Protected Routes** with authentication middleware
-- **Role-based Access Control** for workspace management
-
-## 🚀 Real-time Features
-
-### Socket.io Events
-
-- **User Presence** - `user-joined`, `user-left`
-- **Card Operations** - `card-created`, `card-updated`, `card-deleted`, `card-moved`
-- **List Operations** - `list-created`, `list-updated`, `list-deleted`
-- **Cursor Sharing** - `cursor-move`
-- **Card Reordering** - `cards-reordered`
-
-### Collaboration Features
-
-- **Live Cursor Tracking** - See other users' mouse movements
-- **Online User Indicators** - Know who's currently active
-- **Real-time Updates** - All changes sync instantly
-- **Cross-user Synchronization** - Workspace state stays consistent
-
-## 🎯 Key Features Implemented
-
-### ✅ Completed Features
-
-- [x] User authentication and registration
-- [x] Workspace creation and management
-- [x] Public/Private workspace visibility
-- [x] Member management with roles
-- [x] List and card CRUD operations
-- [x] Drag and drop functionality
-- [x] Real-time collaboration
-- [x] Cursor sharing
-- [x] Online user indicators
-- [x] Responsive design
-- [x] Socket.io integration
-- [x] JWT authentication with user data
-- [x] Database fallback for user names
-- [x] Real-time workspace refresh
-
-### 🔮 Future Enhancements
-
-- [ ] File attachments for cards
-- [ ] Email notifications
-- [ ] Dark mode support
-- [ ] Advanced search and filtering
-- [ ] Workspace templates
-- [ ] Time tracking
-- [ ] Comments and mentions
-- [ ] Workspace analytics
-- [ ] Mobile app
-- [ ] API rate limiting
-- [ ] Workspace archiving
-- [ ] Advanced permissions
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Port 5000 already in use**
-
-   ```bash
-   # Kill all Node.js processes
-   taskkill /f /im node.exe
-   # Then restart the server
-   npm start
-   ```
-
-2. **MongoDB connection issues**
-
-   - Ensure MongoDB is running
-   - Check the MONGODB_URI in .env file
-   - Verify MongoDB is accessible on localhost:27017
-
-3. **Socket.io connection issues**
-
-   - Check if backend server is running on port 5000
-   - Verify CORS settings in backend
-   - Check browser console for connection errors
-
-4. **"Unknown User" on cursors**
-   - Log out and log back in to get a new JWT token
-   - The system will automatically fetch user names from the database
-
-## Support
-
-If you encounter any issues or have questions, please:
-
-1. Check the troubleshooting section above
-2. Review the console logs for error messages
-3. Ensure all dependencies are properly installed
-4. Verify your environment variables are set correctly
-
----
 
 **Happy Collaborating!**
