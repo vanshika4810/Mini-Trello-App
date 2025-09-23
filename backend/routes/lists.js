@@ -152,4 +152,55 @@ router.delete("/:listId", auth, async (req, res) => {
   }
 });
 
+// Edit a list title
+router.put(
+  "/:listId",
+  [
+    auth,
+    body("title").trim().isLength({ min: 1 }).withMessage("Title is required"),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: errors.array(),
+        });
+      }
+
+      const { listId } = req.params;
+      const { title } = req.body;
+
+      const list = await List.findById(listId).populate("workspaceId");
+      if (!list) {
+        return res.status(404).json({ message: "List not found" });
+      }
+
+      const workspace = await Workspace.findOne({
+        _id: list.workspaceId,
+        "members.user": req.user.id,
+      });
+
+      if (!workspace) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedList = await List.findByIdAndUpdate(
+        listId,
+        { title: title.trim() },
+        { new: true }
+      );
+
+      res.json({
+        message: "List updated successfully",
+        list: updatedList,
+      });
+    } catch (error) {
+      console.error("Update list error:", error);
+      res.status(500).json({ message: "Server error during list update" });
+    }
+  }
+);
+
 module.exports = router;
