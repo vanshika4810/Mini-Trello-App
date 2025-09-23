@@ -1,8 +1,10 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 const Card = require("../models/Card");
 const List = require("../models/List");
 const Workspace = require("../models/Workspace");
+const Activity = require("../models/Activity");
 const auth = require("../middleware/auth");
 
 const router = express.Router();
@@ -83,6 +85,14 @@ router.post(
       });
 
       await card.populate("assignedTo", "name email");
+
+      // Create activity log
+      await Activity.create({
+        workspaceId: workspaceId,
+        userId: req.user.id,
+        action: `created card "${title}"`,
+        timestamp: new Date(),
+      });
 
       // Emit real-time update
       const io = req.app.get("io");
@@ -247,6 +257,14 @@ router.put(
       const updatedCard = await Card.findByIdAndUpdate(cardId, updateData, {
         new: true,
       }).populate("assignedTo", "name email");
+
+      // Create activity log
+      await Activity.create({
+        workspaceId: card.workspaceId,
+        userId: req.user.id,
+        action: `updated card "${updatedCard.title}"`,
+        timestamp: new Date(),
+      });
 
       // Emit real-time update
       const io = req.app.get("io");

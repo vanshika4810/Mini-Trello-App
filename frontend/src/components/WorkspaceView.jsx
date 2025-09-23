@@ -28,11 +28,14 @@ import {
   X,
   User,
   LogOut,
+  Activity,
 } from "lucide-react";
 import List from "./List";
 import CreateList from "./CreateList";
 import AddMembers from "./InviteMembers";
 import UserCursor from "./UserCursor";
+import SearchFilter from "./SearchFilter";
+import ActivityFeed from "./ActivityFeed";
 
 const WorkspaceView = () => {
   const { workspaceId } = useParams();
@@ -63,6 +66,9 @@ const WorkspaceView = () => {
   const [activeCard, setActiveCard] = useState(null);
   const [activeList, setActiveList] = useState(null);
   const [userCursors, setUserCursors] = useState({});
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [showActivityFeed, setShowActivityFeed] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -339,6 +345,32 @@ const WorkspaceView = () => {
 
   const handleCloseAddMembers = () => {
     setIsAddingMembers(false);
+  };
+
+  const handleSearchResults = (results) => {
+    setSearchResults(results);
+    setIsSearchMode(true);
+  };
+
+  const handleClearSearch = () => {
+    setSearchResults([]);
+    setIsSearchMode(false);
+  };
+
+  // Helper function to check if current user is admin or owner
+  const isUserAdminOrOwner = () => {
+    if (!currentWorkspace || !user) return false;
+
+    // Check if user is the owner
+    if (currentWorkspace.owner && currentWorkspace.owner._id === user.id) {
+      return true;
+    }
+
+    // Check if user has admin role
+    const userMember = currentWorkspace.members?.find(
+      (member) => member.user._id === user.id
+    );
+    return userMember?.role === "admin";
   };
 
   const handleDragStart = (event) => {
@@ -642,7 +674,7 @@ const WorkspaceView = () => {
                 </button>
 
                 {/* Add Members Button (only for private workspaces) */}
-                {currentWorkspace.visibility === "private" && (
+                {isUserAdminOrOwner() && (
                   <button
                     onClick={handleAddMembers}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -702,7 +734,86 @@ const WorkspaceView = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        {/* Search Filter and Activity Feed - Top Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <SearchFilter
+                workspaceId={workspaceId}
+                onSearchResults={handleSearchResults}
+                onClearSearch={handleClearSearch}
+              />
+            </div>
+            <button
+              onClick={() => setShowActivityFeed(!showActivityFeed)}
+              className={`flex items-center px-4 py-5.5 rounded-lg border transition-colors ${
+                showActivityFeed
+                  ? "bg-blue-50 border-blue-300 text-blue-700"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              {showActivityFeed ? "Hide Activity" : "Show Activity"}
+            </button>
+          </div>
+
+          {/* Activity Feed Display - Below Search Filter */}
+          {showActivityFeed && (
+            <div className="w-full">
+              <ActivityFeed workspaceId={workspaceId} />
+            </div>
+          )}
+        </div>
+
+        {/* Search Results Display - Full Width */}
+        {isSearchMode && (
+          <div className="mb-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Search Results
+                </h3>
+                <button
+                  onClick={handleClearSearch}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Clear Search
+                </button>
+              </div>
+              {searchResults.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">
+                  No cards found matching your search criteria.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {searchResults.map((card) => (
+                    <div
+                      key={card._id}
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
+                    >
+                      <h4 className="font-medium text-gray-900 text-sm mb-1">
+                        {card.title}
+                      </h4>
+                      {card.description && (
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                          {card.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {card.listId?.title || "Unknown List"}
+                        </span>
+                        {card.assignedTo && <span>{card.assignedTo.name}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

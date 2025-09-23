@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { Calendar, User, Tag, Edit2, Trash2, Move } from "lucide-react";
+import { Calendar, User, Tag, Edit2, Trash2, Move, MessageCircle } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import EditCard from "./EditCard";
+import Comments from "./Comments";
 
 const Card = ({ card, onEdit, onDelete, onMove, isDragging = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const {
     attributes,
@@ -153,7 +155,26 @@ const Card = ({ card, onEdit, onDelete, onMove, isDragging = false }) => {
             </div>
           )}
         </div>
+        
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowComments(!showComments);
+          }}
+          className="flex items-center text-gray-400 hover:text-blue-600 transition-colors"
+          title="Comments"
+        >
+          <MessageCircle className="h-3 w-3 mr-1" />
+          <span className="text-xs">Comments</span>
+        </button>
       </div>
+
+      {showComments && (
+        <Comments 
+          cardId={card._id} 
+          workspaceId={card.workspaceId} 
+        />
+      )}
     </div>
   );
 };

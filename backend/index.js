@@ -10,7 +10,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173", // Frontend URL
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -154,6 +154,9 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/workspaces", require("./routes/workspaces"));
 app.use("/api/cards", require("./routes/cards"));
 app.use("/api/lists", require("./routes/lists"));
+app.use("/api/comments", require("./routes/comments"));
+app.use("/api/search", require("./routes/search"));
+app.use("/api/activities", require("./routes/activities"));
 
 // Health check route
 app.get("/", (req, res) => {
