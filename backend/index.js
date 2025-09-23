@@ -15,6 +15,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/workspaces", require("./routes/workspaces"));
+app.use("/api/cards", require("./routes/cards"));
+app.use("/api/lists", require("./routes/lists"));
 
 // Health check route
 app.get("/", (req, res) => {
