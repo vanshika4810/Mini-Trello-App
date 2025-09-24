@@ -27,4 +27,8 @@ const listSchema = new mongoose.Schema({
   ],
 });
 
+listSchema.index({ workspaceId: 1 });
+listSchema.index({ workspaceId: 1, position: 1 });
+listSchema.index({ position: 1 });
+
 module.exports = mongoose.model("List", listSchema);

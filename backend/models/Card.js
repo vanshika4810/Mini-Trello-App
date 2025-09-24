@@ -35,4 +35,11 @@ const cardSchema = new mongoose.Schema({
   },
 });
 
+cardSchema.index({ listId: 1 });
+cardSchema.index({ workspaceId: 1, listId: 1 });
+cardSchema.index({ workspaceId: 1, labels: 1 });
+cardSchema.index({ title: "text", description: "text" });
+cardSchema.index({ position: 1 });
+cardSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Card", cardSchema);

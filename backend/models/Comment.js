@@ -37,4 +37,9 @@ commentSchema.pre("save", function (next) {
   next();
 });
 
+commentSchema.index({ cardId: 1 });
+commentSchema.index({ workspaceId: 1 });
+commentSchema.index({ cardId: 1, createdAt: 1 });
+commentSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Comment", commentSchema);

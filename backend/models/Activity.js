@@ -19,4 +19,9 @@ const activitySchema = new mongoose.Schema({
   },
 });
 
+activitySchema.index({ workspaceId: 1 });
+activitySchema.index({ userId: 1 });
+activitySchema.index({ workspaceId: 1, timestamp: -1 });
+activitySchema.index({ timestamp: -1 });
+
 module.exports = mongoose.model("Activity", activitySchema);
