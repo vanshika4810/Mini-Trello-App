@@ -45,7 +45,10 @@ router.post(
   [
     auth,
     body("cardId").isMongoId().withMessage("Valid card ID is required"),
-    body("content").trim().isLength({ min: 1 }).withMessage("Comment content is required"),
+    body("content")
+      .trim()
+      .isLength({ min: 1 })
+      .withMessage("Comment content is required"),
   ],
   async (req, res) => {
     try {
@@ -119,7 +122,10 @@ router.put(
   "/:commentId",
   [
     auth,
-    body("content").trim().isLength({ min: 1 }).withMessage("Comment content is required"),
+    body("content")
+      .trim()
+      .isLength({ min: 1 })
+      .withMessage("Comment content is required"),
   ],
   async (req, res) => {
     try {
@@ -141,7 +147,9 @@ router.put(
 
       // Check if user is the author of the comment
       if (comment.userId.toString() !== req.user.id) {
-        return res.status(403).json({ message: "You can only edit your own comments" });
+        return res
+          .status(403)
+          .json({ message: "You can only edit your own comments" });
       }
 
       comment.content = content.trim();
@@ -184,7 +192,9 @@ router.delete("/:commentId", auth, async (req, res) => {
 
     // Check if user is the author of the comment
     if (comment.userId.toString() !== req.user.id) {
-      return res.status(403).json({ message: "You can only delete your own comments" });
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own comments" });
     }
 
     await Comment.findByIdAndDelete(commentId);

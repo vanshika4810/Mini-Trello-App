@@ -21,9 +21,7 @@ const generateToken = (user) => {
   );
 };
 
-// @route   POST /api/auth/register
-// @desc    Register user
-// @access  Public
+// Register user
 router.post(
   "/register",
   [
@@ -82,9 +80,7 @@ router.post(
   }
 );
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
+// Login user
 router.post(
   "/login",
   [
@@ -134,9 +130,7 @@ router.post(
   }
 );
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
+// Get current user
 router.get("/me", auth, async (req, res) => {
   try {
     res.json({

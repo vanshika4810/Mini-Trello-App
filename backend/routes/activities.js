@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/workspace/:workspaceId", auth, async (req, res) => {
   try {
     const { workspaceId } = req.params;
-    const { limit = 50, offset = 0 } = req.query;
+    const { limit = 20, offset = 0 } = req.query;
 
     // Check if user has access to the workspace
     const workspace = await Workspace.findOne({
