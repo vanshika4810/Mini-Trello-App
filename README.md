@@ -73,7 +73,7 @@ The application uses a well-structured MongoDB schema with the following entity 
 1. **Clone the repository**
 
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/vanshika4810/Mini-Trello-App.git
    cd mini-trello-app
    ```
 
