@@ -28,19 +28,13 @@ app.use(express.urlencoded({ extended: true }));
 // Socket.io authentication middleware
 io.use(async (socket, next) => {
   const token = socket.handshake.auth.token;
-  console.log("Socket auth attempt - token present:", !!token);
 
   if (!token) {
-    console.log("Socket authentication failed: No token provided");
     return next(new Error("Authentication error"));
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("JWT decoded successfully:", {
-      id: decoded.id,
-      name: decoded.name,
-    });
 
     socket.userId = decoded.id;
 
@@ -48,30 +42,21 @@ io.use(async (socket, next) => {
     if (decoded.name) {
       socket.userName = decoded.name;
     } else {
-      console.log("Name not in JWT, fetching from database...");
       const user = await User.findById(decoded.id).select("name");
       socket.userName = user?.name || "Unknown User";
     }
 
-    console.log(
-      `Socket authenticated for user: ${socket.userName} (${socket.userId})`
-    );
     next();
   } catch (err) {
-    console.log("Socket authentication failed: Invalid token", err.message);
-    console.log("Token that failed:", token);
     next(new Error("Authentication error"));
   }
 });
 
 // Socket.io connection handling
 io.on("connection", async (socket) => {
-  console.log(`User ${socket.userName} connected: ${socket.id}`);
-
   // Join workspace room
   socket.on("join-workspace", (workspaceId) => {
     socket.join(`workspace-${workspaceId}`);
-    console.log(`User ${socket.userName} joined workspace ${workspaceId}`);
 
     // Notify others in the workspace
     socket.to(`workspace-${workspaceId}`).emit("user-joined", {
@@ -84,7 +69,6 @@ io.on("connection", async (socket) => {
   // Leave workspace room
   socket.on("leave-workspace", (workspaceId) => {
     socket.leave(`workspace-${workspaceId}`);
-    console.log(`User ${socket.userName} left workspace ${workspaceId}`);
 
     // Notify others in the workspace
     socket.to(`workspace-${workspaceId}`).emit("user-left", {
@@ -103,7 +87,6 @@ io.on("connection", async (socket) => {
       y: data.y,
       workspaceId: data.workspaceId,
     };
-    console.log("Emitting cursor-move:", cursorData);
     socket.to(`workspace-${data.workspaceId}`).emit("cursor-move", cursorData);
   });
 
@@ -160,10 +143,9 @@ app.use("/api/activities", require("./routes/activities"));
 
 // Health check route
 app.get("/", (req, res) => {
-  res.json({ message: "Mini Kanban API is running! 🚀" });
+  res.json({ message: "Mini Kanban API is running!" });
 });
 
 server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
-  console.log(`Socket.io server ready for real-time connections`);
 });

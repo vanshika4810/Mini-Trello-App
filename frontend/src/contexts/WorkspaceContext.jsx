@@ -154,12 +154,6 @@ export const WorkspaceProvider = ({ children }) => {
     async (cardId, targetListId, newPosition, workspaceId) => {
       try {
         const token = localStorage.getItem("token");
-        console.log("Frontend - Moving card:", {
-          cardId,
-          targetListId,
-          newPosition,
-          workspaceId,
-        });
         const response = await axios.put(
           `http://localhost:5000/api/cards/${cardId}/move`,
           {
@@ -211,11 +205,6 @@ export const WorkspaceProvider = ({ children }) => {
     async (listId, cardOrder, workspaceId) => {
       try {
         const token = localStorage.getItem("token");
-        console.log("Frontend - Reordering cards:", {
-          listId,
-          cardOrder,
-          workspaceId,
-        });
         const response = await axios.put(
           `http://localhost:5000/api/cards/reorder`,
           {

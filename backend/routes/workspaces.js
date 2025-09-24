@@ -111,7 +111,6 @@ router.get("/:workspaceId", auth, async (req, res) => {
     if (!workspace) {
       return res.status(404).json({ message: "Workspace not found" });
     }
-    console.log("Workspace fetched successfully");
     res.json({
       message: "Workspace fetched successfully",
       workspace,
@@ -306,18 +305,6 @@ router.post(
           member.user.toString() === req.user.id && member.role === "admin"
       );
 
-      console.log("Add member debug:", {
-        workspaceId,
-        userId: req.user.id,
-        workspaceOwner: workspace.owner.toString(),
-        isOwner,
-        isAdmin,
-        members: workspace.members.map((m) => ({
-          user: m.user.toString(),
-          role: m.role,
-        })),
-      });
-
       if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -375,8 +362,6 @@ router.delete("/:workspaceId/members/:userId", auth, async (req, res) => {
 
     // Check if workspace has an owner, if not, set the first admin as owner
     if (!workspace.owner) {
-      console.log("Workspace has no owner, attempting to fix:", workspaceId);
-
       // Find the first admin member
       const adminMember = workspace.members.find(
         (member) => member.role === "admin"
@@ -386,14 +371,12 @@ router.delete("/:workspaceId/members/:userId", auth, async (req, res) => {
         // Set the admin as owner
         workspace.owner = adminMember.user;
         await workspace.save();
-        console.log("Set owner to first admin member:", adminMember.user);
       } else if (workspace.members.length > 0) {
         // If no admin, set the first member as owner and admin
         const firstMember = workspace.members[0];
         workspace.owner = firstMember.user;
         firstMember.role = "admin";
         await workspace.save();
-        console.log("Set first member as owner and admin:", firstMember.user);
       } else {
         console.error("Workspace has no members and no owner:", workspaceId);
         return res

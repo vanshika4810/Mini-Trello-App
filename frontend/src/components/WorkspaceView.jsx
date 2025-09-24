@@ -97,57 +97,46 @@ const WorkspaceView = () => {
 
       // Create event handlers
       const handleCardMoved = (data) => {
-        console.log("Real-time card moved:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleCardsReordered = (data) => {
-        console.log("Real-time cards reordered:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleCardUpdated = (data) => {
-        console.log("Real-time card updated:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleListUpdated = (data) => {
-        console.log("Real-time list updated:", data);
-        console.log("Current user ID:", user?.id, "Data user ID:", data.userId);
         // Refresh workspace for all users
-        console.log("Refreshing workspace due to list update");
         getWorkspace(workspaceId);
       };
 
       const handleCardCreated = (data) => {
-        console.log("Real-time card created:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleCardDeleted = (data) => {
-        console.log("Real-time card deleted:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleListCreated = (data) => {
-        console.log("Real-time list created:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleListDeleted = (data) => {
-        console.log("Real-time list deleted:", data);
         // Refresh workspace for all users
         getWorkspace(workspaceId);
       };
 
       const handleCursorMove = (data) => {
-        console.log("Cursor move received:", data);
         if (data.userId !== user?.id) {
           setUserCursors((prev) => ({
             ...prev,
@@ -175,7 +164,6 @@ const WorkspaceView = () => {
 
       // Cleanup on unmount
       return () => {
-        console.log("Cleaning up workspace socket listeners");
         leaveWorkspace(workspaceId);
         socket.off("card-moved", handleCardMoved);
         socket.off("cards-reordered", handleCardsReordered);
@@ -273,7 +261,6 @@ const WorkspaceView = () => {
 
   const handleCardMove = (card) => {
     setMovingCard(card);
-    console.log("Move card:", card);
   };
 
   const handleListCreated = async (newList) => {
@@ -399,14 +386,10 @@ const WorkspaceView = () => {
     const activeId = active.id;
     const overId = over.id;
 
-    console.log("Drag end - Active ID:", activeId, "Over ID:", overId);
-
     // Check if we're dragging a list or a card
     const isDraggingList = currentWorkspace.lists?.some(
       (list) => list._id === activeId
     );
-
-    console.log("Is dragging list:", isDraggingList);
 
     if (isDraggingList) {
       // Handle list reordering
@@ -417,13 +400,6 @@ const WorkspaceView = () => {
         (list) => list._id === overId
       );
 
-      console.log(
-        "List reorder - Source index:",
-        sourceIndex,
-        "Target index:",
-        targetIndex
-      );
-
       if (sourceIndex !== targetIndex) {
         const newListOrder = arrayMove(
           currentWorkspace.lists,
@@ -432,11 +408,8 @@ const WorkspaceView = () => {
         );
         const listIds = newListOrder.map((list) => list._id);
 
-        console.log("New list order:", listIds);
-
         try {
           const result = await reorderLists(workspaceId, listIds);
-          console.log("Reorder lists result:", result);
           if (!result.success) {
             console.error("Failed to reorder lists:", result.error);
           }
@@ -448,7 +421,6 @@ const WorkspaceView = () => {
     }
 
     // Handle card drag and drop (existing logic)
-    console.log("Handling card drag and drop");
 
     // Find the source list and card
     let sourceList = null;
@@ -463,15 +435,7 @@ const WorkspaceView = () => {
       }
     }
 
-    console.log(
-      "Source list:",
-      sourceList?.title,
-      "Source card:",
-      sourceCard?.title
-    );
-
     if (!sourceList || !sourceCard) {
-      console.log("No source list or card found");
       return;
     }
 
@@ -491,7 +455,6 @@ const WorkspaceView = () => {
       if (targetList && targetList._id !== sourceList._id) {
         // Moving to different list
         const newPosition = targetList.cards?.length || 0;
-        console.log("Moving card to list - New position:", newPosition);
         try {
           const result = await moveCard(
             activeId,
@@ -499,7 +462,6 @@ const WorkspaceView = () => {
             newPosition,
             workspaceId
           );
-          console.log("Move card to list result:", result);
           if (!result.success) {
             console.error("Failed to move card:", result.error);
           }
@@ -537,14 +499,12 @@ const WorkspaceView = () => {
             targetIndex
           );
           const cardIds = newCardOrder.map((card) => card._id);
-          console.log("Reordering cards in same list - Card IDs:", cardIds);
           try {
             const result = await reorderCards(
               sourceList._id,
               cardIds,
               workspaceId
             );
-            console.log("Reorder cards result:", result);
             if (!result.success) {
               console.error("Failed to reorder cards:", result.error);
             }
@@ -555,10 +515,6 @@ const WorkspaceView = () => {
       } else {
         // Moving to different list
         const targetIndex = targetList.cards.findIndex((c) => c._id === overId);
-        console.log(
-          "Moving card to different list - Target index:",
-          targetIndex
-        );
         try {
           const result = await moveCard(
             activeId,
@@ -566,7 +522,6 @@ const WorkspaceView = () => {
             targetIndex,
             workspaceId
           );
-          console.log("Move card result:", result);
           if (!result.success) {
             console.error("Failed to move card:", result.error);
           }

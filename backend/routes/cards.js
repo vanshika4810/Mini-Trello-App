@@ -71,7 +71,7 @@ router.post(
         workspaceId,
         position,
         assignedTo: assignedTo ? new mongoose.Types.ObjectId(assignedTo) : null,
-        labels: labels.map((label) => new mongoose.Types.ObjectId(label)),
+        labels: labels || [],
         dueDate: dueDate ? new Date(dueDate) : null,
       };
 
@@ -155,9 +155,6 @@ router.put(
       const cardsInList = await Card.find({ listId: listId });
       const listCardIds = cardsInList.map((card) => card._id.toString());
 
-      console.log("Cards in list:", listCardIds);
-      console.log("Card order received:", cardOrder);
-
       for (const cardId of cardOrder) {
         const cardIdStr = cardId.toString();
         if (!listCardIds.includes(cardIdStr)) {
@@ -168,18 +165,12 @@ router.put(
         }
       }
 
-      console.log("Updating card positions...");
       for (let i = 0; i < cardOrder.length; i++) {
-        console.log(`Updating card ${cardOrder[i]} to position ${i + 1}`);
         await Card.findByIdAndUpdate(cardOrder[i], { position: i + 1 });
       }
-
-      console.log("Updating list cardOrder array...");
       await List.findByIdAndUpdate(listId, {
         cardOrder: cardOrder,
       });
-
-      console.log("Cards reordered successfully");
 
       // Emit real-time update
       const io = req.app.get("io");

@@ -126,10 +126,8 @@ router.put(
           userId: req.user.id,
           userName: req.user.name,
         };
-        console.log("Emitting list-updated event:", emitData);
         io.to(`workspace-${list.workspaceId}`).emit("list-updated", emitData);
       } else {
-        console.log("Socket.io not available for list update emission");
       }
 
       res.json({

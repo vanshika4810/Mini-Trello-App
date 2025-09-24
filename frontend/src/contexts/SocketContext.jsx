@@ -20,13 +20,6 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user && token) {
-      console.log(
-        "Initializing socket with user:",
-        user.name,
-        "token:",
-        token ? "present" : "missing"
-      );
-
       // Initialize socket connection with authentication
       const newSocket = io("http://localhost:5000", {
         auth: {
@@ -37,12 +30,10 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on("connect", () => {
-        console.log("Socket connected:", newSocket.id);
         setConnected(true);
       });
 
       newSocket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
         setConnected(false);
         setOnlineUsers([]);
       });
@@ -54,7 +45,6 @@ export const SocketProvider = ({ children }) => {
 
       // Handle user presence events
       newSocket.on("user-joined", (data) => {
-        console.log("User joined:", data);
         if (data && data.userId && data.userName) {
           setOnlineUsers((prev) => {
             const exists = prev.find((u) => u.userId === data.userId);
@@ -67,7 +57,6 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on("user-left", (data) => {
-        console.log("User left:", data);
         if (data && data.userId) {
           setOnlineUsers((prev) =>
             prev.filter((u) => u.userId !== data.userId)
@@ -78,7 +67,6 @@ export const SocketProvider = ({ children }) => {
       setSocket(newSocket);
 
       return () => {
-        console.log("Cleaning up socket connection");
         newSocket.disconnect();
         setSocket(null);
         setConnected(false);
