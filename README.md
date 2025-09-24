@@ -121,7 +121,7 @@ The application uses a well-structured MongoDB schema with the following entity 
         password: testing
      2. email: divya@gmail.com
         password: testing
-     3. rohit@xyz.com
+     3. email: rohit@xyz.com
         password: testing
      4. email: marie@hotmail.com
         password: testing
@@ -218,66 +218,3 @@ The application uses a well-structured MongoDB schema with the following entity 
    - Reorder cards within lists
    - Drag lists to reorder them
    - All movements sync in real-time
-
-## 🚀 Database Optimization
-
-### Performance Indexes
-
-The application includes comprehensive database indexes for optimal query performance:
-
-#### **User Model**
-
-- `email` - Unique index for authentication
-- `name` - For user search functionality
-
-#### **Workspace Model**
-
-- `members.user` - For finding workspaces by member
-- `visibility` - For public workspace queries
-- `owner` - For finding workspaces by owner
-- `members.user + visibility` - Compound index for member + visibility queries
-- `createdAt` - For sorting by creation date
-
-#### **Card Model**
-
-- `workspaceId` - For finding cards by workspace
-- `listId` - For finding cards by list
-- `assignedTo` - For finding cards by assignee
-- `workspaceId + listId` - Compound index for workspace + list queries
-- `workspaceId + assignedTo` - For assignee filtering in workspace
-- `workspaceId + labels` - For label filtering in workspace
-- `title + description` - Text search index for full-text search
-- `position` - For sorting cards by position
-- `createdAt` - For sorting by creation date
-
-#### **List Model**
-
-- `workspaceId` - For finding lists by workspace
-- `workspaceId + position` - Compound index for workspace + position sorting
-- `position` - For sorting lists by position
-
-#### **Comment Model**
-
-- `cardId` - For finding comments by card
-- `workspaceId` - For finding comments by workspace
-- `userId` - For finding comments by user
-- `cardId + createdAt` - Compound index for card + chronological sorting
-- `createdAt` - For sorting by creation date
-
-#### **Activity Model**
-
-- `workspaceId` - For finding activities by workspace
-- `userId` - For finding activities by user
-- `workspaceId + timestamp` - Compound index for workspace + chronological sorting
-- `timestamp` - For sorting by timestamp
-
-### Index Creation
-
-Run the index creation script after setting up your database:
-
-```bash
-cd backend
-node scripts/createIndexes.js
-```
-
-**Happy Collaborating!**
