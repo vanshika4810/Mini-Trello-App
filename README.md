@@ -45,13 +45,26 @@ A full-featured Kanban board application with real-time collaboration, built wit
 - **Real-time Visual Feedback** - See changes as they happen
 - **Clean, Intuitive Interface** - Easy to use for teams
 
+## Database Schema
+
+The application uses a well-structured MongoDB schema with the following entity relationships:
+
+![Database ER Diagram](./mini-trello.PNG)
+
+### Key Features of the Schema
+
+- **Hierarchical Structure**: Workspace → List → Card → Comment
+- **User Management**: Owner and member roles with different permissions
+- **Activity Tracking**: Complete audit trail of user actions
+- **Real-time Collaboration**: Optimized for live updates and synchronization
+- **Search Optimization**: Text indexes and compound indexes for fast queries
+
 ## Quick Start
 
 ### Prerequisites
 
 - **Node.js**
 - **MongoDB Compass**
-- **MongoDB Database Tools** (mongorestore)
 - **MongoDB Database Tools** (mongorestore)
 - **npm**
 
@@ -115,29 +128,6 @@ A full-featured Kanban board application with real-time collaboration, built wit
    - Sample workspaces
    - Sample lists and cards
    - Sample activities and comments
-
-6. **Create database indexes (Optional but recommended)**
-
-   For optimal performance, create database indexes:
-
-   ```bash
-   # Navigate to backend directory
-   cd backend
-
-   # Create indexes for better query performance
-   node scripts/createIndexes.js
-   ```
-
-   This will create indexes for:
-
-   - User searches and authentication
-   - Workspace member queries
-   - Card filtering and text search
-   - Comment and activity sorting
-   - List positioning
-
-7. **Start MongoDB**
-   Make sure MongoDB is running on your system.
 
 ### Running the Application
 
