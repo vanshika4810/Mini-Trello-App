@@ -141,7 +141,6 @@ app.use("/api/comments", require("./routes/comments"));
 app.use("/api/search", require("./routes/search"));
 app.use("/api/activities", require("./routes/activities"));
 
-// Health check route
 app.get("/", (req, res) => {
   res.json({ message: "Mini Kanban API is running!" });
 });
