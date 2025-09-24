@@ -99,7 +99,6 @@ The application uses a well-structured MongoDB schema with the following entity 
    PORT=5000
    MONGODB_URI=mongodb://localhost:27017/mini-trello
    JWT_SECRET=your-jwt-key
-   NODE_ENV=development
    ```
 
 5. **Restore the database dump**
